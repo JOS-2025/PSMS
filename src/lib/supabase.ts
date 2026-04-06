@@ -42,6 +42,12 @@ export async function checkSupabaseConnection(): Promise<{ success: boolean; err
   try {
     const { error } = await supabase.from('stations').select('id').limit(1);
     if (error) {
+      // If we get a permission denied error, it means the database is reachable
+      // but the user is not authenticated yet. This is a successful connection.
+      if (error.code === '42501' || error.message.toLowerCase().includes('permission denied')) {
+        return { success: true };
+      }
+      
       if (error.message.includes('Failed to fetch')) {
         return { 
           success: false, 
